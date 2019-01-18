@@ -6,8 +6,6 @@ import {Observable,of } from 'rxjs';
   providedIn: 'root'
 })
 export class UserService {
-
-
   constructor() { }
   private user:User[]=[
     {
@@ -24,8 +22,6 @@ export class UserService {
  get():Observable<User[]>{
   return  of(this.user);
 }
-
-
 
 
 }

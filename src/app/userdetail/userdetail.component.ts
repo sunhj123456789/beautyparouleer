@@ -13,14 +13,13 @@ export class UserdetailComponent implements OnInit {
   constructor(private userservice:UserService) { }
   data:User[];
   ngOnInit() {
-this.getuser();
+  this.getuser();
   }
 getuser(){
     this.userservice.get().subscribe((data)=>{
   this.data=data;
   console.log(this.data);
     });
-
   }
   
 }
