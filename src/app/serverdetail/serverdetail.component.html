@@ -1,0 +1,31 @@
+<p>Add server or blueprint</p>
+<div class="container">
+<div class="row">
+  <div class="col-xs-10">
+    <div class="form-group">
+    <label for="servername">ServerName</label>
+    <input type="text" [(ngModel)]="servername" class="form-control">
+    </div>
+  </div>
+</div>
+  
+
+<div class="row">
+  <div class="col-xs-10">
+    <div class="form-group">
+    <label for="servername">content</label>
+    <input type="text" [(ngModel)]="content" class="form-control">  
+    <!----<input type="text" class="form-control" #content>-->
+  </div>
+  </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-10">
+     <button type="button" class="btn btn-primary" (click)="addServer()">Addserver</button>
+     <button type="button" class="btn btn-primary"(click)="blueServer(content)">blueserver</button>   
+    </div>
+ </div>
+</div>
+  
+  

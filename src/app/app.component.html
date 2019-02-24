@@ -1,1 +1,83 @@
-<app-userdetail></app-userdetail>
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12 col-md-12">
+             <ul class="nav nav-tabs">
+              <li routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}"><a href='#' routerLink='/' >Home</a></li>
+              <li routerLinkActive="active"><a href='#' routerLink='/server'>server</a></li>
+              <li routerLinkActive="active"><a href='#' [routerLink]="['/users']">user</a></li>
+             </ul>
+        </div>
+        
+    </div>
+</div>
+
+<router-outlet></router-outlet>
+
+<div *ngIf="isShow">
+    <div class="loader">        
+    </div>
+</div>
+
+
+
+      <!----  <app-newaccount></app-newaccount>
+        <app-account *ngFor="let item of Accounts;let i=index" [acc]="item" [in]="i"></app-account>
+ 
+ 
+
+
+
+<!----div class="row">
+    <div class="col-xs-12">
+        <app-serverdetail (addserver)="addServer($event)" (blueserver)="blueServer1($event)"></app-serverdetail>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">  
+  <app-serverdisplay *ngFor="let data of serverData" [serverEle]="data">
+        <p #test><strong><em *ngIf="data.type=='server'">{{data.serverName}}</em></strong></p>  
+        <em *ngIf="data.type=='blueserver'" style="color:blue">{{data.serverName}}</em>
+      
+
+  </app-serverdisplay>
+    </div>
+</div>
+
+
+<button type="button" class="btn btn-primary" (click)='isOdd=!isOdd'>toggleNumbe</button>
+<div *ngIf="isOdd">
+<li class="list-group-item"  [ngClass]="{odd:num %2 !==0}" *ngFor="let num of oddNumber">
+    {{num}}
+</li>
+</div>
+<!----
+<div *ngIf="!isOdd" >   
+    <li class="list-group-item" 
+    [ngClass]="{even:num %2 ==0}"     
+    [ngStyle]="{border:num %2==0?' 1px solid yellow':'1px solid green'}"
+    *ngFor="let num of evenNumber">
+    
+        {{num}}
+    </li>
+</div>-->
+
+
+<!----<div  *appUnless="!isOdd">
+    <li class="list-group-item" 
+    [ngClass]="{even:num %2 ==0}"     
+    [ngStyle]="{border:num %2==0?' 1px solid yellow':'1px solid green'}"
+    *ngFor="let num of evenNumber">
+    {{num}}
+    </li>
+</div>
+
+<div [ngSwitch]='value'>
+    <p *ngSwitchCase="5">this value is 5</p>
+    <p *ngSwitchCase="10">this value is 10</p>
+    <p *ngSwitchCase="15">this value is 15</p>
+    <p *ngSwitchCase="20">this value is 20</p>
+    <p *ngSwitchDefault>this value is default value 200</p>
+
+</div>
+<p [appTestcolor]="'red'">this is directive color</p>-->
