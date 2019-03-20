@@ -1,0 +1,47 @@
+/***dropdown directive**********************/
+import { Directive,HostBinding,HostListener,ElementRef } from '@angular/core';
+
+@Directive({
+  selector: '[appColorinput]'
+})
+export class ColorinputDirective {
+    constructor(private _el:ElementRef) { }
+    @HostBinding('class.show')isOpen=false;
+    @HostListener('click')toggleOpen(){
+      this.isOpen=!this.isOpen; 
+      this._el.nativeElement.querySelector('.dropdown-menu').classList.add('show');
+         }
+   @HostListener('document:click',['$event.target'])close(targetelement){
+    alert('test');
+     let inside:boolean=this._el.nativeElement.contains(targetelement);
+     if(!inside){
+       this.isOpen=false;
+        this._el.nativeElement.querySelector('.dropdown-menu').classList.remove('show');
+     }
+   }
+  
+
+}
+
+***html******/
+
+
+<!--<p appColorinput>this is new directive</p>
+<input type="text" appColorinput>-->
+<div class="container">
+  <nav  class="navbar navbar-expand-md bg-dark">
+    <ul class="navbar-nav">
+          <li class="nav-item "><a href="#" class="nav-link text-white text-uppercase">home</a></li>
+          <li class="nav-item  dropdown appColorinput ">
+            <a href="#" class="nav-link text-white text-uppercase dropdown-toggle" data-toggle="dropdown"> list</a>
+          <div class="dropdown-menu ">
+          <a class="dropdown-item">list1</a> 
+          <a class="dropdown-item">list2</a> 
+          <a class="dropdown-item">list3</a>        
+          </div>          
+        </li>
+          <li class="nav-item "><a href="#" class="nav-link text-white text-uppercase">contact</a></li>
+    </ul>
+  </nav>
+</div>
+*****
