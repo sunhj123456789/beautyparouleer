@@ -1,0 +1,146 @@
+
+     locationDetails=["chennai","madurai","coimbatore","france","italy","norway"];
+     <app-testtap [location1]="locationDetails"></app-testtap>
+/******************outlink directive************************/
+import { Directive } from '@angular/core';
+
+@Directive({
+  selector: '[appOutlink]'
+})
+export class OutlinkDirective {
+
+  constructor() { }
+  constructor(private _elementRef: ElementRef) {
+    }
+
+    @Output()
+    public crvClickOutside = new EventEmitter<MouseEvent>();
+
+    @HostListener('document:click', ['$event', '$event.target'])
+    public onClick(event: MouseEvent, targetElement: HTMLElement): void {
+        if (!targetElement) {
+            return;
+        }
+
+        const clickedInside = this._elementRef.nativeElement.contains(targetElement);
+
+        if (!clickedInside) {
+            this.crvClickOutside.emit(event);
+        }x
+    }
+}
+
+/**************************ts file************/
+import { Component, OnInit,Input } from '@angular/core';
+import { CmpService } from './../cmp.service';
+
+@Component({
+  selector: 'app-testtap',
+  templateUrl: './testtap.component.html',
+  styleUrls: ['./testtap.component.css']
+})
+export class TesttapComponent implements OnInit {
+ @Input() location1:any;
+ locationHeader:string[]=null;
+ locationDropDown:string[]=null;
+ actualDropdownData:string[]=null;
+ selectedLocation="otherlocation";
+ showMenu = false;
+ 
+ 
+  constructor(private cmp:CmpService) { }
+
+  ngOnInit() {
+   this.locationHeader=this.location1.slice(0,3);   
+   this.locationDropDown=this.location1.slice(3,this.location1.length);  
+   this.actualDropdownData=JSON.parse(JSON.stringify(this.locationDropDown));
+   
+  }
+ getRegion() {
+    return this.cmp.selectedRegion;
+  }
+
+ getselectedLocation() {
+
+    if (this.actualDropdownData && this.actualDropdownData.indexOf(this.selectedLocation) !== -1) {
+      return this.selectedLocation.toUpperCase();
+    } else {
+      this.selectedLocation = 'OTHER LOCATIONS';
+      return 'OTHER LOCATIONS';
+    }
+  }
+getActiveRegion() {
+    return ((this.actualDropdownData !== null) && (this.actualDropdownData.indexOf(this.getRegion()) !== -1));
+  }
+setLocation(location) {
+    this.cmp.selectedRegion = location;
+    if (this.actualDropdownData && this.actualDropdownData.indexOf(location) === -1) {
+      this.hideMenu();
+    }
+  }
+
+  onChange(location) {
+    if (location !== 'OTHER LOCATIONS') {
+      this.selectedLocation = location;
+      this.setLocation(location);
+    }
+  }
+  showMenuDropdown($event, frmArrow) {
+    $event.stopPropagation();
+    this.getselectedLocation();
+    if (frmArrow) {
+      this.showMenu = true;
+    } else {
+      this.showMenu = this.selectedLocation !== 'OTHER LOCATIONS' ? false : true;
+    }
+    return false;
+
+  }
+isCurrentLocation(loc: string) {
+    return (loc === this.selectedLocation);
+  }
+
+
+hideMenu(){
+  this.showMenu=false;
+}
+}
+
+/********html file**************/
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+  <nav class="navbar navabar-expand-sm bg-dark ">
+  <ul class="navbar-nav">
+    <li class="nav-item" [ngClass]='{"active": getRegion()==="all" || !getRegion()}'>
+                            <a class="nav-link" (click)='setLocation("all")'>
+                                   all
+                               </a>
+                        </li>
+     <li class="nav-item" *ngFor="let location of locationHeader" [ngClass]='{"active": getRegion()===location}'>
+                            <a class="nav-link"><span (click)='setLocation(location)'>{{location}}</span></a>
+                        </li>
+    <div (mousedown)='onChange(selectedLocation);showMenuDropdown($event, false)' *ngIf="locationDropDown" class="dropdown locationDropDown">
+
+                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                <span class="selectedLocation" (mousedown)='onChange(selectedLocation);showMenuDropdown($event, false)'  [ngClass]='{"active": getActiveRegion()}' >  {{getselectedLocation()}}
+                                    </span>
+                                    <span class='separator'></span>
+                            </button>
+                            <div class="dropdown-menu" [ngClass]='{"showMenu": showMenu}'>
+                                <a (mousedown)="onChange(loc)" *ngFor="let loc of locationDropDown" [class.hidden]="isCurrentLocation(loc)" class="dropdown-item">{{loc}}</a>
+                            </div>
+                        </div>
+                        <span *ngIf="locationDropDown" class="down-arrow" (focusout)="hideMenu()" [ngClass]='{"activeArrow": getActiveRegion()}'
+                            (mousedown)='showMenuDropdown($event, true)'></span>
+    
+   
+  </ul>
+  </nav>
+  </div>
+  </div>
+
+</div>
+
+/******************end********************/
+
