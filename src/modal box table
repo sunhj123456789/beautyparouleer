@@ -1,0 +1,453 @@
+/*********************user************************************/
+import { Component, OnInit } from '@angular/core';
+import { ModaltestComponent } from './../modaltest/modaltest.component';
+import { NgbActiveModal, NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
+
+
+
+
+@Component({
+  selector: 'app-user',
+  templateUrl: './user.component.html',
+  styleUrls: ['./user.component.css']
+})
+export class UserComponent implements OnInit {
+
+  constructor(private modalService: NgbModal,
+    public activeModal: NgbActiveModal) { }
+
+  ngOnInit() {
+  }
+
+open(){
+  this.modalService.open(ModaltestComponent, { size: 'lg', backdrop: 'static', windowClass: 'search-results' });
+}
+
+
+}
+
+/******************user.html*************/
+<button type="button" class="btn btn-primary" (click)="open()">open</button>
+
+/*************user.css**************/
+::ng-deep .search-results-modal .modal-lg .modal-content {
+  border: none !important;
+  border-radius: 0 !important;
+  height: 100vh !important;
+  background-color:white
+}
+
+::ng-deep .modal-bookmark {
+  width: 680px !important;
+  height: 422px;
+  margin: auto;
+}
+
+ ::ng-deep .modal-bookmark  .modal-dialog {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    max-width: 100% !important;
+ }
+
+   ::ng-deep .modal-bookmark  .modal-dialog .modal-content {
+      border-radius: 0 !important;
+      height: 100%;
+    }
+  
+/************modaltest.ts********************/
+import { Component, OnInit } from '@angular/core';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { TestService } from './../test.service';
+import { Subscription } from 'rxjs';
+
+
+@Component({
+  selector: 'app-modaltest',
+  templateUrl: './modaltest.component.html',
+  styleUrls: ['./modaltest.component.css']
+})
+export class ModaltestComponent implements OnInit {
+subscription: Subscription;
+data:any;
+config:any;
+_data:any;
+filteredData:any;
+ private _textValue = '';
+  set textValue(value: string) {
+    this._textValue = value;
+    if (this._data) {
+      this.filteredData = this.DataTransform(this._data, value, 1);
+    }
+  }
+  get textValue(): string {
+    return this._textValue;
+  }
+
+  constructor(private modalService: NgbModal,
+    public activeModal: NgbActiveModal,
+    private testservice:TestService    
+     ) { }
+
+  ngOnInit() {
+ this.subscription = this.testservice.getData().subscribe( resp => {
+      this.data = resp;
+      this.config = this.testservice.getConfig();
+    });
+  }
+DataTransform(data: any, textValue: string, filterThreshold: number): any {
+    const filteredData = [];
+    if (textValue === '' || textValue === undefined || (textValue.length < filterThreshold)) {
+      return data;
+    } else {
+      data.forEach(element => {
+        if (element.name.search((textValue)) === 0) { // just the first lestters
+          filteredData.push(element);
+        }
+      });
+      return filteredData;
+    }
+  }
+
+
+  close(){
+    this.activeModal.close();
+  }
+  gotoTarget($event) {
+    this.router.navigate([`/${$event.target}/test`]);
+    this.close();
+  }
+   delete($event) {
+    this.filteredData.length = $event.length;
+   }
+
+
+
+}
+
+/************modal.css**************/
+ input[type='text'] {
+          border: none;
+          background: transparent;
+          outline: none;
+          box-shadow: none;
+          height: 26px;
+          width: 180px;
+          font-size: 30px;
+          margin-top: 13px;
+ }
+ 
+/*******modal.html****************/
+ 
+ <div *ngIf="config.filter==true">
+
+            <input type="text" placeholder="Filter" [(ngModel)]="textValue">
+            <span *ngIf="textValue.length > 0" class="reset-filter" (click)="textValue=''"></span>
+
+  
+  </div>
+  <button type="button" class="btn btn-primary"(click)=
+  "close()">X</button>
+<app-table [data]="filteredData" [config]="config" (gotoTarget)="gotoTarget($event)" (delete)="delete($event)"></app-table>
+
+
+/***********table.ts**************************/
+import { Component, OnInit, Input, Output, EventEmitter, OnChanges, SimpleChanges, Renderer2 } from '@angular/core';
+import * as orderBy from 'lodash/orderBy';
+import * as remove from 'lodash/remove';
+
+
+@Component({
+  selector: 'app-table',
+  templateUrl: './table.component.html',
+  styleUrls: ['./table.component.css']
+})
+export class TableComponent implements OnInit {
+
+@Input() data: any;
+@Input() config: any;
+@Input() filter: string;
+@Output() gotoTarget = new EventEmitter();
+@Output() delete = new EventEmitter();
+
+ dataList: any;
+  sortAsc = true;
+  bookmarked: Array<boolean>;
+  allChecked: boolean;
+  column: number;
+
+  constructor(private renderer: Renderer2) { }
+
+  ngOnInit() {
+    if (this.data) {     
+      this.setup();
+      this.allChecked = false;
+    }
+
+  }
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.data !== undefined) {
+      if (changes.data.firstChange || changes.data.currentValue.length !== changes.data.previousValue.length) {
+        this.dataList = changes.data.currentValue;
+      }
+    }
+  }
+
+  private setup() {
+    this.dataList = this.data;
+
+    if (this.hasCheckboxes()) {
+      this.dataList.forEach(element => {
+        element.checked = false;
+      });
+    }
+  }
+
+  hasCheckboxes(){
+    if (this.data) {
+      return this.config.checkbox;
+    } else {
+      return false;
+    }
+
+  }
+  canDelete() {
+    if (this.data) {
+      return this.config.isDeletable;
+    } else {
+      return false;
+    }
+  }
+
+  hasSorting() {
+    if (this.data) {
+      return this.config.sort;
+    } else {
+      return false;
+    }
+  }
+  deleteLine(row) {
+    this.dataList = remove(this.dataList, (item) => {
+      return item.crds !== row.crds;
+    });
+    this.delete.emit({ event: event, length: this.dataList.length });
+  }
+
+sortData(column) {
+    this.sortAsc = !this.sortAsc;
+    if (this.column !== column) {
+      this.column = column;
+      this.dataList = orderBy(this.dataList, [this.column]);
+    } else {
+      this.dataList.reverse();
+    }
+  }
+  checkAll() {
+    if (this.hasCheckboxes()) {
+      this.allChecked = !this.allChecked;
+      // check all the checkboxes
+      const tableLength = this.dataList.length;
+      for (let i = 0; i < tableLength; i++) {
+        this.bookmarked[i] = this.allChecked;
+        this.renderer.selectRootElement('#slaveCheckbox-' + i).checked = this.allChecked;
+      }
+      this.dataList.forEach(element => {
+        element.checked = this.allChecked;
+      });
+    }
+  }
+  bookmark(indexRow) {
+    if (this.hasCheckboxes()) {
+      const oldBookmarked = this.bookmarked[indexRow];
+      this.bookmarked[indexRow] = !this.bookmarked[indexRow];
+      this.allChecked = this.bookmarked.every(item => item === this.bookmarked[0]);
+      // modify the state of the master checkbox
+      this.renderer.selectRootElement('#masterCheckbox').checked = this.allChecked;
+    }
+  }
+ goTo(target) {
+    this.gotoTarget.emit({ event: event, target: target });
+  }
+
+
+}
+/**************table.html**************************/
+<div class="wrapper">
+  <table class="table">
+    <thead class="table-header">
+      <tr>
+        <th scope="col" *ngIf="hasCheckboxes()" width="80">
+          <div class="custom-control custom-checkbox">
+            <input type="checkbox" class="custom-control-input" [checked]="masterCheckbox" (change)="checkAll()" id="masterCheckbox">
+            <label class="custom-control-label" for="masterCheckbox"></label>
+          </div>
+        </th>
+        <th scope="col" *ngFor="let rank of config?.column" width="{{rank.width}}">
+            {{rank.name}}
+          <span *ngIf="hasSorting()" class="sort" [ngClass]="{'up': sortAsc}" (click)="sortData(rank.token)"></span>
+        </th>
+      </tr>
+    </thead>
+  </table>
+  <div class="table-body-wrapper">
+      <table class="table table-hover">
+        <tbody class="table-body">
+          <tr *ngFor="let dataRow of dataList; let indexRow=index;">
+            <td *ngIf="hasCheckboxes()" width="80">
+              <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" [(ngModel)]="dataRow.checked" (change)="bookmark(indexRow)" id="slaveCheckbox-{{indexRow}}">
+                <label class="custom-control-label" for="slaveCheckbox-{{indexRow}}"></label>
+              </div>
+            </td>
+            <td *ngFor="let rank of config?.column; let indexColumn=index;" (click)="goTo(dataRow.crds)" title="{{dataRow.name}}" [ngClass]="{'slim': (indexColumn === 1), 'ellipsable': (indexColumn === 0)}" width="{{rank.width}}">
+              {{dataRow[rank.token]}}
+            </td>
+            <div *ngIf="canDelete()" class="delete-icon" (click)="deleteLine(dataRow)"></div>
+          </tr>
+        </tbody>
+      </table>
+  </div>
+</div>
+
+/****************table.css*******************/
+.results-list-header {
+  background-color: white;
+  height: 231px;
+}
+ .results-list-header .button-close {
+    display: block;
+    position: absolute;
+    top: 25px;
+    right: 30px;
+    height: 55px;
+    width: 55px;
+    background: transparent url('/assets/images/svg/close_black.svg') no-repeat center center;
+    border: 1px solid #ddd;
+    border-radius: 50px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .results-list-content {
+    display: block;
+    max-width: 1068px;
+    margin: 0 auto;
+    padding: 31px 0 0;
+  }
+   .results-list-content  .text-result {
+      display: inline-block;
+      font-size: 25px;
+      color: red;
+      width: 50%;
+    }
+
+    
+
+      .table-filter {
+        display: inline-block;
+        border: none;
+        outline: none;
+        padding: 0 0 17px 50px;
+        width: 250px;
+        height: 50px;
+        vertical-align: middle;
+        text-align: left;
+        font-size: $primary-font-size-small;
+        background: $white url('/assets/images/svg/search-fill.svg') no-repeat 24px 14px;
+        border-radius: 50px;
+        box-shadow: 0 0 4px 1px rgba(0, 0, 0, 0.2);
+      }
+     .table-filter   input[type='text'] {
+          border: none;
+          background: transparent;
+          outline: none;
+          box-shadow: none;
+          height: 26px;
+          width: 180px;
+          font-size: 18px;
+          margin-top: 13px;
+     }
+
+       .table-filter   input[type='text'] >  ::-ms-clear { // only for IE
+            display: inline-block;
+            color: $white;
+            background: $flows-detail-grey;
+            border-radius: 30px;
+            width: 26px;
+            height: 26px;
+            cursor: pointer;
+          }
+        
+
+        @media screen and (-webkit-min-device-pixel-ratio: 0) { // Only for chrome
+          padding: 0 0 17px 50px;
+
+          input[type='text'] {
+            width: 155px;
+          }
+
+          .reset-filter {
+            display: inline-block;
+            position: relative;
+            color: $white;
+            background: $white url('/assets/images/svg/clear-grey.svg') no-repeat center center;
+            background-size: 32px 32px;
+            border-radius: 30px;
+            width: 26px;
+            height: 26px;
+            top: 7px;
+            left: 5px;
+            cursor: pointer;
+          }
+        }
+/***********service***************************/
+import { Injectable } from '@angular/core';
+import 'rxjs/add/observable/of';
+import { of } from 'rxjs';
+@Injectable()
+export class TestService {
+
+  constructor() { }
+   fakeData:any = [
+  {
+    name: 'raj',
+    crds: '45',
+    type: 'testing',
+    country: 'india'
+  },
+  {
+    name: 'ramesh',
+    crds: '46',
+    type: 'developer',
+    country: 'srilanka'
+  }];
+
+ config:any = {
+  checkbox: true,
+  sort: true,
+  isFilter: false,
+  filterThreshold: 0,
+  filterClass: '.table-filter input',
+  filterResetClass: '.table-filter .reset-filter',
+  isBookmark: true,
+  isTopLabel: true,
+  isDeletable: false,  
+  class: { slim: 1 },
+  column: [
+    { name: 'Deparment', token: 'name', width: 368 },
+    { name: 'rolno', token: 'crds', width: 260 },
+    { name: 'type', token: 'type', width: 167 },
+    { name: 'country', token: 'country', width: 190 }
+  ]
+};
+ getData():any {
+        return of(this.fakeData);
+  }
+
+  getConfig():any {
+    return this.config;
+  }
+
+}
+
+
